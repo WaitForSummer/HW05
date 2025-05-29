@@ -24,7 +24,7 @@ target_include_directories(banking PUBLIC banking)
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(third-party/gtest)
-    add_executable(myTest tests/test.cpp)
+    add_executable(myTest tests/testing.cpp)
     target_link_libraries(myTest
         gtest_main
         gmock_main
