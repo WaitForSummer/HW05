@@ -32,7 +32,7 @@ jobs:
     run: _build/myTest
       
   - name: lcov
-    run: lcov -c -d _build/CMakeFiles/banking.dir/banking/ --include *.cpp --output-file ./coverage/lcov.info
+    run: lcov -c -d _build/CMakeFiles/banking.dir/banking/ --include *.cpp --output-file ./cov/lcov.info
   
   - name: Coveralls
     uses: coverallsapp/github-action@v2
