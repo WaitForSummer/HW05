@@ -1,0 +1,41 @@
+name: buildHW05
+
+on:
+ push:
+  branches: [master]
+ pull_request:
+  branches: [master]
+
+jobs: 
+ build_Linux:
+
+  runs-on: ubuntu-latest
+
+  steps:
+  - uses: actions/checkout@v4
+
+  - name: добавление gtest
+    run: git clone https://github.com/google/googletest.git third-party/gtest
+    
+
+  - name: Установка lcov
+    run: sudo apt-get install -y lcov 
+  
+  - name: Конфигурация
+    run: |
+      rm -rf ${{github.workspace}}/_build
+      mkdir _build && cd _build
+      cmake .. -DBUILD_TESTS=ON -DCMAKE_CXX_FLAGS='--coverage'
+      cmake --build .
+
+  - name: Запуск тестов
+    run: _build/my_test
+      
+  - name: lcov
+    run: lcov -c -d _build/CMakeFiles/banking.dir/banking/ --include *.cpp --output-file ./coverage/lcov.info
+  
+  - name: Coveralls
+    uses: coverallsapp/github-action@v2
+    with:
+      github-token: ${{ secrets.GITHUB_TOKEN }} 
+      path-to-lcov: ${{ github.workspace }}/coverage/lcov.info
