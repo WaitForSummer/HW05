@@ -29,7 +29,7 @@ jobs:
       cmake --build .
 
   - name: Запуск тестов
-    run: _build/my_test
+    run: _build/myTest
       
   - name: lcov
     run: lcov -c -d _build/CMakeFiles/banking.dir/banking/ --include *.cpp --output-file ./coverage/lcov.info
