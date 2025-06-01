@@ -93,9 +93,10 @@ TEST(AccountTest, UnlockDirectly) {
     EXPECT_NO_THROW(acc.ChangeBalance(0));
 }
 
-TEST(TransactionTest, DebitFailsDueToLowBalance) {
-    Account acc(5, 50);
-    acc.Lock();
+TEST(TransactionTest, NotEnoughMoneyToDebit) {
+    Account from(1, 100);
+    Account to(2, 300);
     Transaction tr;
-    EXPECT_FALSE(tr.Debit(acc, 100));
+    tr.set_fee(50);
+    EXPECT_FALSE(tr.Make(from, to, 60));
 }
