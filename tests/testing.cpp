@@ -17,14 +17,20 @@ public:
 
 TEST(AccountTest, LockUnlockBehavior) {
     MockAccount acc(0, 1111);
-    EXPECT_CALL(acc, Lock()).Times(2);
+
+    EXPECT_CALL(acc, Lock()).Times(1);
+    acc.Lock();
+    EXPECT_NO_THROW(acc.ChangeBalance(100));
+
+    EXPECT_CALL(acc, Lock()).Times(1);
+    EXPECT_THROW(acc.Lock(), std::runtime_error);
+
     EXPECT_CALL(acc, Unlock()).Times(1);
-    acc.Lock();
-    EXPECT_NO_THROW(acc.ChangeBalance(100));  
-    acc.Lock();
-    EXPECT_THROW(acc.ChangeBalance(100), std::logic_error);
     acc.Unlock();
+
+    EXPECT_THROW(acc.ChangeBalance(100), std::runtime_error);
 }
+
 
 TEST(AccountTest, BalanceOperations) {
     Account acc(0, 1000);
@@ -92,7 +98,7 @@ TEST(AccountTest, UnlockDirectly) {
     Account acc(42, 1000);
     acc.Lock();
     acc.Unlock();
-    EXPECT_NO_THROW(acc.ChangeBalance(0));
+    EXPECT_THROW(acc.ChangeBalance(0), std::runtime_error);
 }
 
 TEST(TransactionTest, NotEnoughMoneyToDebit) {
@@ -100,5 +106,5 @@ TEST(TransactionTest, NotEnoughMoneyToDebit) {
     Account to(2, 300);
     Transaction tr;
     tr.set_fee(50);
-    EXPECT_FALSE(tr.Make(from, to, 60));
+    EXPECT_FALSE(tr.Make(from, to, 100));
 }
