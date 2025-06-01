@@ -114,6 +114,7 @@ TEST(TransactionTest, NotEnoughMoneyToDebit) {
 
 TEST(AccountTest, DebCallsGBlncNgtvSum) {
     MockAccount acc(1, 1000);
+    Transaction tr;
     int sum = 500;
 
     ON_CALL(acc, Lock()).WillByDefault([&acc]() { acc.Account::Lock(); });
@@ -126,6 +127,12 @@ TEST(AccountTest, DebCallsGBlncNgtvSum) {
 
     EXPECT_CALL(acc, GetBalance()).WillOnce(Return(-sum));
 
+    acc.Lock();
+    bool result = tr.Debit(acc, sum);
+    acc.Unlock();
+
+    EXPECT_TRUE(result);
+    
     acc.ChangeBalance(-sum);
 
     int balance = acc.GetBalance();
