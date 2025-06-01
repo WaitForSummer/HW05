@@ -116,19 +116,20 @@ TEST(AccountTest, DebCallsGBlncNgtvSum) {
     MockAccount acc(1, 1000);
     int sum = 500;
 
-    ON_CALL(acc, ChangeBalance(::testing::_))
-        .WillByDefault([&acc](int diff) { acc.Account::ChangeBalance(diff); });
-
-    ON_CALL(acc, GetBalance())
-        .WillByDefault([&acc]() { return acc.Account::GetBalance(); });
+    ON_CALL(acc, Lock()).WillByDefault([&acc]() { acc.Account::Lock(); });
+    ON_CALL(acc, Unlock()).WillByDefault([&acc]() { acc.Account::Unlock(); });
+    ON_CALL(acc, ChangeBalance(::testing::_)).WillByDefault([&acc](int diff) { acc.Account::ChangeBalance(diff); });
+    
+    acc.Lock();
 
     EXPECT_CALL(acc, ChangeBalance(-sum)).Times(1);
 
-    EXPECT_CALL(acc, GetBalance())
-        .WillOnce(Return(-sum));
+    EXPECT_CALL(acc, GetBalance()).WillOnce(Return(-sum));
 
     acc.ChangeBalance(-sum);
 
     int balance = acc.GetBalance();
     EXPECT_EQ(balance, -sum);
+
+    acc.Unlock();
 }
