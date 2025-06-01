@@ -65,8 +65,7 @@ TEST(TransactionTest, SuccessfulTransaction) {
         .WillOnce(Return(1000))
         .WillOnce(Return(790));
     EXPECT_CALL(to, GetBalance())
-        .WillOnce(Return(500))
-        .WillOnce(Return(700));
+        .WillOnce(Return(500));
     
     EXPECT_CALL(from, ChangeBalance(-210)).Times(1);
     EXPECT_CALL(to, ChangeBalance(200)).Times(1);
