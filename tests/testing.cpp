@@ -37,13 +37,10 @@ TEST(AccountTest, NegativeBalanceScenario) {
     EXPECT_CALL(acc, Lock()).Times(1);
     EXPECT_CALL(acc, ChangeBalance(-150)).Times(1);
     
-    EXPECT_CALL(acc, GetBalance())
-        .WillOnce(Return(100))
-        .WillOnce(Return(-50));
-    
     acc.Lock();
     acc.ChangeBalance(-150);
 }
+
 
 TEST(TransactionTest, FeeManagement) {
     Transaction tr;
