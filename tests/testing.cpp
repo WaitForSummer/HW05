@@ -18,19 +18,22 @@ public:
 TEST(AccountTest, LockUnlockBehavior) {
     MockAccount acc(0, 1111);
 
-    EXPECT_CALL(acc, Lock()).Times(1);
+    ON_CALL(acc, Lock()).WillByDefault([&acc]() { acc.Account::Lock(); });
+    ON_CALL(acc, Unlock()).WillByDefault([&acc]() { acc.Account::Unlock(); });
+    ON_CALL(acc, ChangeBalance(::testing::_)).WillByDefault([&acc](int diff) { acc.Account::ChangeBalance(diff); });
+
+    EXPECT_CALL(acc, Lock()).Times(2);
+    EXPECT_CALL(acc, Unlock()).Times(1);
+
     acc.Lock();
     EXPECT_NO_THROW(acc.ChangeBalance(100));
 
-    EXPECT_CALL(acc, Lock()).Times(1);
     EXPECT_THROW(acc.Lock(), std::runtime_error);
 
-    EXPECT_CALL(acc, Unlock()).Times(1);
     acc.Unlock();
 
     EXPECT_THROW(acc.ChangeBalance(100), std::runtime_error);
 }
-
 
 TEST(AccountTest, BalanceOperations) {
     Account acc(0, 1000);
