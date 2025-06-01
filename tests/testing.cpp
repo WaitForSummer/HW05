@@ -85,3 +85,17 @@ TEST(TransactionTest, InvalidTransactions) {
     tr.set_fee(100);
     EXPECT_THROW(tr.Make(acc1, acc2, 50), std::logic_error);
 }
+
+TEST(AccountTest, UnlockDirectly) {
+    Account acc(42, 1000);
+    acc.Lock();
+    acc.Unlock();
+    EXPECT_NO_THROW(acc.ChangeBalance(0));
+}
+
+TEST(TransactionTest, DebitFailsDueToLowBalance) {
+    Account acc(5, 50);
+    acc.Lock();
+    Transaction tr;
+    EXPECT_FALSE(tr.Debit(acc, 100));
+}
