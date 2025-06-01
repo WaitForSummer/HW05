@@ -83,5 +83,5 @@ TEST(TransactionTest, InvalidTransactions) {
     EXPECT_THROW(tr.Make(acc1, acc2, -50), std::invalid_argument);
     
     tr.set_fee(100);
-    EXPECT_FALSE(tr.Make(acc1, acc2, 50));
+    EXPECT_THROW(tr.Make(acc1, acc2, 50), std::runtime_error);
 }
