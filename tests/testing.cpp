@@ -111,3 +111,24 @@ TEST(TransactionTest, NotEnoughMoneyToDebit) {
     tr.set_fee(50);
     EXPECT_FALSE(tr.Make(from, to, 100));
 }
+
+TEST(AccountTest, DebCallsGBlncNgtvSum) {
+    MockAccount acc(1, 1000);
+    int sum = 500;
+
+    ON_CALL(acc, ChangeBalance(::testing::_))
+        .WillByDefault([&acc](int diff) { acc.Account::ChangeBalance(diff); });
+
+    ON_CALL(acc, GetBalance())
+        .WillByDefault([&acc]() { return acc.Account::GetBalance(); });
+
+    EXPECT_CALL(acc, ChangeBalance(-sum)).Times(1);
+
+    EXPECT_CALL(acc, GetBalance())
+        .WillOnce(Return(-sum));
+
+    acc.ChangeBalance(-sum);
+
+    int balance = acc.GetBalance();
+    EXPECT_EQ(balance, -sum);
+}
