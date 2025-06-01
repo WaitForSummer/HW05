@@ -133,6 +133,5 @@ TEST(TransactionTest, DebitCallsGetBalanceReturnsNegativeSum) {
     bool result = tr.Debit(acc, sum);
 
     EXPECT_TRUE(result);
-
     acc.Unlock();
 }
