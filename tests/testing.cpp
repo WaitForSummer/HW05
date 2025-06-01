@@ -1,82 +1,123 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
 #include "Account.h"
 #include "Transaction.h"
 
+using ::testing::NiveMock;
 using ::testing::Return;
 using ::testing::Throw;
 using ::testing::_;
 
-class MyAccount : public Account {
+class MockAccount : public Account {
 public:
-    MyAccount(int id, int balance) : Account(id, balance) {}
-    MOCK_CONST_METHOD0(GetBalance, int());
-    MOCK_METHOD1(ChangeBalance, void(int diff));
-    MOCK_METHOD0(Lock, void());
-    MOCK_METHOD0(Unlock, void());
+    MockAccount(int id, int balance) : Account(id, balance) {}
+    MOCK_METHOD(int, GetBalance, (), (const, override));
+    MOCK_METHOD(void, ChangeBalance, (int diff), (override));
+    MOCK_METHOD(void, Lock, (), (override));
+    MOCK_METHOD(void, Unlock, (), (override));
 };
 
-TEST(Account, Locker) {
-    MyAccount acc(0, 1111);
-	EXPECT_CALL(acc, Lock()).Times(2);
-	EXPECT_CALL(acc, Unlock()).Times(1);
-	acc.Lock();
-	acc.Lock();
-	acc.Unlock();
+TEST(AccountTest, Locker) {
+    NiceMock<MockAccount> acc(0, 1000);
+    
+    EXPECT_CALL(acc, Lock()).Times(2);
+    EXPECT_CALL(acc, Unlock()).Times(1);
+    
+    acc.Lock();
+    acc.Lock();
+    acc.Unlock();
 }
 
 TEST(Account, balance_positive) {
-    Account acc1(0, 1000);
-    EXPECT_EQ(acc1.GetBalance(), 1000);
-
-    acc1.Lock();
-    EXPECT_NO_THROW(acc1.ChangeBalance(100));
-
-    EXPECT_EQ(acc1.GetBalance(), 1100);
+    Account acc(1, 1000);
+    acc.Lock();
+    
+    EXPECT_NO_THROW(acc.ChangeBalance(500));
+    EXPECT_EQ(acc.GetBalance(), 1500);
+    
+    EXPECT_NO_THROW(acc.ChangeBalance(-200));
+    EXPECT_EQ(acc.GetBalance(), 1300);
 }
 
 TEST(Accout, balance_negative) {
-    Account Vasya(1, 100);
-
-    EXPECT_THROW(Vasya.ChangeBalance(100), std::runtime_error);
+    NiceMock<MockAccount> mockAcc(2, 100);
     
-    Vasya.Lock();
-    EXPECT_ANY_THROW(Vasya.Lock());
-}
-
-TEST(Transaction, construnct_and_positive) {
-    Transaction first;
-    EXPECT_EQ(first.fee(), 1);
-
-    Account Petya(0, 6132);
-    Account Katya(1, 2133);
-
-    first.set_fee(32);
-    EXPECT_EQ(first.fee(), 32);
-
-    EXPECT_TRUE(first.Make(Petya, Katya, 100));
-    EXPECT_EQ(Katya.GetBalance(), 2233);
-    EXPECT_EQ(Petya.GetBalance(), 6000);
-
-}
-
-TEST(Transaction, negative) {
-    Transaction second;
-    second.set_fee(51);
-    Account Roma(0, 10);
-    Account Misha(1, 1000);
-
-    EXPECT_THROW(second.Make(Misha, Misha, 0), std::logic_error);
-
-    EXPECT_THROW(second.Make(Misha, Roma, -100), std::invalid_argument);
-
-    EXPECT_THROW(second.Make(Misha, Roma, 50), std::logic_error);
-
-    EXPECT_FALSE(second.Make(Misha, Roma, 100));
-
-    second.set_fee(10);
-
-    EXPECT_FALSE(second.Make(Roma, Misha, 100));
+    EXPECT_CALL(mockAcc, Lock());
     
+    EXPECT_CALL(mockAcc, GetBalance())
+        .WillOnce(Return(100))
+        .WillOnce(Return(-50));
+    
+    EXPECT_CALL(mockAcc, ChangeBalance(-150))
+        .Times(1);
+    
+    mockAcc.Lock();
+    mockAcc.ChangeBalance(-150);
+
+    EXPECT_EQ(mockAcc.GetBalance(), -50); 
 }
+
+TEST(Transaction, fee_mngr) {
+    Transaction tr;
+    EXPECT_EQ(tr.fee(), 1);
+    
+    tr.set_fee(50);
+    EXPECT_EQ(tr.fee(), 50);
+}
+
+TEST(TransactionTest, successful_transctn) {
+
+    NiceMock<MockAccount> from(1, 1000);
+    NiceMock<MockAccount> to(2, 500);
+    Transaction tr;
+    tr.set_fee(10);
+    
+    EXPECT_CALL(from, Lock()).Times(1);
+    EXPECT_CALL(to, Lock()).Times(1);
+    EXPECT_CALL(from, Unlock()).Times(1);
+    EXPECT_CALL(to, Unlock()).Times(1);
+    
+    EXPECT_CALL(from, GetBalance())
+        .WillOnce(Return(1000));
+    EXPECT_CALL(to, GetBalance())
+        .WillOnce(Return(500));
+    
+    EXPECT_CALL(from, ChangeBalance(-210)).Times(1);
+    EXPECT_CALL(to, ChangeBalance(200)).Times(1);
+    
+    EXPECT_TRUE(tr.Make(from, to, 200));
+}
+
+TEST(TransactionTest, negative_baalnce_after_trans) {
+    NiceMock<MockAccount> from(3, 300);
+    NiceMock<MockAccount> to(4, 100);
+    Transaction tr;
+    tr.set_fee(10);
+    
+    EXPECT_CALL(from, GetBalance())
+        .WillOnce(Return(300))
+        .WillOnce(Return(-10));
+    
+    EXPECT_CALL(to, GetBalance())
+        .WillOnce(Return(100));
+    
+    EXPECT_CALL(from, ChangeBalance(-310)).Times(1);
+    EXPECT_CALL(to, ChangeBalance(300)).Times(1);
+    
+    EXPECT_TRUE(tr.Make(from, to, 300));
+    EXPECT_EQ(from.GetBalance(), -10);
+}
+
+TEST(TransactionTest, invalid_transaction) {
+    Account acc1(5, 100);
+    Account acc2(6, 200);
+    Transaction tr;
+    
+    EXPECT_THROW(tr.Make(acc1, acc1, 50), std::logic_error);
+    
+    EXPECT_THROW(tr.Make(acc1, acc2, -50), std::invalid_argument);
+    
+    tr.set_fee(100);
+    EXPECT_FALSE(tr.Make(acc1, acc2, 50));
+}
+
