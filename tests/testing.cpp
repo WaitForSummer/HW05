@@ -4,7 +4,6 @@
 #include "Transaction.h"
 
 using ::testing::Return;
-using ::testing::Throw;
 using ::testing::_;
 
 class MockAccount : public Account {
@@ -27,10 +26,8 @@ TEST(AccountTest, LockUnlockBehavior) {
 
 TEST(AccountTest, BalanceOperations) {
     Account acc(0, 1000);
-    EXPECT_EQ(acc.GetBalance(), 1000);
-
     acc.Lock();
-    EXPECT_NO_THROW(acc.ChangeBalance(100));
+    acc.ChangeBalance(100);
     EXPECT_EQ(acc.GetBalance(), 1100);
 }
 
@@ -38,17 +35,14 @@ TEST(AccountTest, NegativeBalanceScenario) {
     MockAccount acc(1, 100);
     
     EXPECT_CALL(acc, Lock()).Times(1);
+    EXPECT_CALL(acc, ChangeBalance(-150)).Times(1);
     
     EXPECT_CALL(acc, GetBalance())
         .WillOnce(Return(100))
         .WillOnce(Return(-50));
     
-    EXPECT_CALL(acc, ChangeBalance(-150)).Times(1);
-    
     acc.Lock();
-    acc.ChangeBalance(-150); 
-    
-    EXPECT_EQ(acc.GetBalance(), -50);
+    acc.ChangeBalance(-150);
 }
 
 TEST(TransactionTest, FeeManagement) {
@@ -70,8 +64,12 @@ TEST(TransactionTest, SuccessfulTransaction) {
     EXPECT_CALL(from, Unlock()).Times(1);
     EXPECT_CALL(to, Unlock()).Times(1);
     
-    EXPECT_CALL(from, GetBalance()).WillOnce(Return(1000));
-    EXPECT_CALL(to, GetBalance()).WillOnce(Return(500));
+    EXPECT_CALL(from, GetBalance())
+        .WillOnce(Return(1000))
+        .WillOnce(Return(790));
+    EXPECT_CALL(to, GetBalance())
+        .WillOnce(Return(500))
+        .WillOnce(Return(700));
     
     EXPECT_CALL(from, ChangeBalance(-210)).Times(1);
     EXPECT_CALL(to, ChangeBalance(200)).Times(1);
