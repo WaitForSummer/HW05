@@ -20,7 +20,9 @@ TEST(AccountTest, LockUnlockBehavior) {
     EXPECT_CALL(acc, Lock()).Times(2);
     EXPECT_CALL(acc, Unlock()).Times(1);
     acc.Lock();
+    EXPECT_NO_THROW(acc.ChangeBalance(100));  
     acc.Lock();
+    EXPECT_THROW(acc.ChangeBalance(100), std::logic_error);
     acc.Unlock();
 }
 
