@@ -10,6 +10,7 @@ class Transaction {
   bool Make(Account& from, Account& to, int sum);
   int fee() const { return fee_; }
   void set_fee(int fee) { fee_ = fee; }
+  bool Debit(Account& accout, int sum);
 
  private:
   void Credit(Account& accout, int sum);
